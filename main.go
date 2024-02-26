@@ -97,7 +97,8 @@ func main() {
 	defer C.Py_DecRef(greetFunc)
 
 	// log.Println(xor_bytes)
-	inputBytes := []byte{'a', 'b', 'c'}
+	// inputBytes := []byte{'a', 'b', 'c'}
+    inputBytes := make([]byte, 100, 100)
 
 	// Create a Python bytes object
 	pInputBytes := C.PyBytes_FromStringAndSize((*C.char)(unsafe.Pointer(&inputBytes[0])), C.Py_ssize_t(len(inputBytes)))
@@ -125,7 +126,7 @@ func main() {
 	// log.Println(cOutputBytes)
 
 	log.Printf("Input Bytes: %v", inputBytes)
-    log.Println(string(outputBytes))
+    log.Println(outputBytes)
 	// log.Printf("%s", outputBytes)
 	// log.Printf("Output Bytes (after XOR): %v", string(outputBytes))
 
