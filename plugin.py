@@ -8,20 +8,42 @@ gi.require_version('GstBase', '1.0')
 gi.require_version('GstVideo', '1.0')
 gi.require_version('GLib', '2.0')
 
+from gi.repository import Gst, GObject, GLib, GstBase, GstVideo
+
 def is_aarch64():
     return platform.uname()[4] == 'aarch64'
+
 
 sys.path.append('/opt/nvidia/deepstream/deepstream-5.0/sources/python/bindings/' +
                 ('jetson' if is_aarch64() else 'x86_64'))
 
-from gi.repository import Gst, GObject, GLib, GstBase, GstVideo
-
 Gst.init(None)
-FIXED_CAPS = Gst.Caps.from_string(
-    'video/x-raw,format={ (string)RGBA, (string)I420 },width=[1,2147483647],height=[1,2147483647],framerate=[ 0/1, 2147483647/1 ]')
-FIXED_CAPS.append(Gst.Caps.from_string(
-    'video/x-raw(memory:NVMM),format={ (string)RGBA, (string)NV12 },width=[1,2147483647],height=[1,2147483647],framerate=[ 0/1, 2147483647/1 ]'))
 
+# resample_element = Gst.ElementFactory.make("audioresample", "audio-resample")
+# src_element = Gst.ElementFactory.make("audiotestsrc", "audio-source")
+# print(src_element)
+# print(resample_element)
+
+FIXED_CAPS: Gst.Caps = Gst.Caps.new_empty()
+
+caps = Gst.Caps.from_string(
+'video/x-raw,format={ (string)RGBA, (string)I420 },width=[1,2147483647],height=[1,2147483647],framerate=[ 0/1, 2147483647/1 ]'
+)
+if caps is not None:
+    FIXED_CAPS.append(caps)
+
+caps = Gst.Caps.from_string(
+    'video/x-raw(memory:NVMM),format={ (string)RGBA, (string)NV12 },width=[1,2147483647],height=[1,2147483647],framerate=[ 0/1, 2147483647/1 ]'
+)
+
+if caps is not None:
+    FIXED_CAPS.append(caps)
+
+# FIXED_CAPS = Gst.Caps.from_string(
+#     'video/x-raw,format={ (string)RGBA, (string)I420 },width=[1,2147483647],height=[1,2147483647],framerate=[ 0/1, 2147483647/1 ]')
+
+# FIXED_CAPS.append(Gst.Caps.from_string(
+#     'video/x-raw(memory:NVMM),format={ (string)RGBA, (string)NV12 },width=[1,2147483647],height=[1,2147483647],framerate=[ 0/1, 2147483647/1 ]'))
 
 class GstPycustom(GstBase.BaseTransform):
     __gstmetadata__ = (
@@ -49,8 +71,10 @@ class GstPycustom(GstBase.BaseTransform):
         GstBase.BaseTransform.set_in_place(self, True)
 
     def do_transform_ip(self, buf):
-        Gst.debug("transform_ip")
-        #custom operation
+        print("transform_ip")
+        print(buf)
+        # Gst.debug("transform_ip")
+        # custom operation
         return Gst.FlowReturn.OK
 
 GObject.type_register(GstPycustom)

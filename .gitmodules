@@ -1,0 +1,3 @@
+[submodule "gstreamer-stubs"]
+	path = gstreamer-stubs
+	url = https://github.com/romashorodok/gstreamer-stubs
