@@ -27,19 +27,38 @@ COPY ./requirements.txt /app/requirements.txt
 RUN --mount=type=cache,target=/root/.cache \
     pip install -Ur /app/requirements.txt
 
-# --mount=type=cache,target=/app/gstreamer/builddir \
-RUN meson setup -Dauto_features=disabled --default-library=static \
+RUN --mount=type=cache,target=/app/gstreamer/builddir \
+    meson setup -Dauto_features=disabled --default-library=static \
+    -Dgpl=enabled -Dlibav=enabled \
     -Dgst-full-libraries=app,video \
+    -Dpython=disabled \
     -Dgst-plugins-good:vpx=enabled \
+    -Dgst-plugins-good:matroska=enabled \
+    -Dgst-plugins-good:autodetect=enabled \
+    -Dgst-plugin-base:compositor=enabled \
+    -Dgst-plugin-base:videoconvertscale=enabled \
+    -Dgst-plugins-base:audioresample=enabled \
+    -Dvpx:vp8=enabled \
+    -Dvpx:vp9=enabled \
     -Dvpx:vp8_encoder=enabled \ 
     -Dvpx:vp8_decoder=enabled \
     -Dvpx:vp9_encoder=enabled \ 
     -Dvpx:vp9_decoder=enabled \
-    -Dgst-plugins-base:audioresample=enabled \
-    -Dgst-plugins-good:autodetect=enabled \
-    -Dgst-plugin-base:compositor=enabled \
-    -Dgst-plugin-base:videoconvertscale=enabled \
     --reconfigure builddir && meson compile -C builddir && meson install -C builddir
+
+# # --mount=type=cache,target=/app/gstreamer/builddir \
+# RUN meson setup -Dauto_features=disabled --default-library=static \
+#     -Dgst-full-libraries=app,video \
+#     -Dgst-plugins-good:vpx=enabled \
+#     -Dvpx:vp8_encoder=enabled \ 
+#     -Dvpx:vp8_decoder=enabled \
+#     -Dvpx:vp9_encoder=enabled \ 
+#     -Dvpx:vp9_decoder=enabled \
+#     -Dgst-plugins-base:audioresample=enabled \
+#     -Dgst-plugins-good:autodetect=enabled \
+#     -Dgst-plugin-base:compositor=enabled \
+#     -Dgst-plugin-base:videoconvertscale=enabled \
+#     --reconfigure builddir && meson compile -C builddir && meson install -C builddir
 
 WORKDIR /app/gstreamer/subprojects/gst-python
 # --mount=type=cache,target=/app/gstreamer/subprojects/gst-python/builddir \
