@@ -1,0 +1,122 @@
+import gi
+gi.require_version('Gst', '1.0')
+from gi.repository import Gst, GLib, GObject
+
+Gst.init(None)
+
+FORMATS = "{RGBx,BGRx,xRGB,xBGR,RGBA,BGRA,ARGB,ABGR,RGB,BGR}"
+
+class GstGaussianBlur(Gst.Element):
+    GST_PLUGIN_NAME = 'gaussianblur'
+
+    __gstmetadata__ = ("gaussianblur",
+                       "Filter",
+                       "Apply Gaussian Blur to Buffer",
+                       "Taras Lishchenko <taras at lifestyletransfer dot com>")
+
+    __gsttemplates__ = (Gst.PadTemplate.new("src",
+                                            Gst.PadDirection.SRC,
+                                            Gst.PadPresence.ALWAYS,
+                                            Gst.Caps.from_string(f"video/x-raw,format={FORMATS}")),
+                        Gst.PadTemplate.new("sink",
+                                            Gst.PadDirection.SINK,
+                                            Gst.PadPresence.ALWAYS,
+                                            Gst.Caps.from_string(f"video/x-raw,format={FORMATS}")))
+
+    __gproperties__ = {
+        "kernel": (GObject.TYPE_INT64, "Kernel Size", "Gaussian Kernel Size", 1, GLib.MAXINT, 3, GObject.ParamFlags.READWRITE),
+        "sigmaX": (GObject.TYPE_FLOAT, "Standart deviation in X", "Gaussian kernel standard deviation in X direction", 1.0, GLib.MAXFLOAT, 1.0, GObject.ParamFlags.READWRITE),
+        "sigmaY": (GObject.TYPE_FLOAT, "Standart deviation in Y", "Gaussian kernel standard deviation in Y direction", 1.0, GLib.MAXFLOAT, 1.0, GObject.ParamFlags.READWRITE),
+    }
+
+    def __init__(self):
+        super(GstGaussianBlur, self).__init__()
+
+        self.kernel_size = 3
+        self.sigma_x = 1.0
+        self.sigma_y = 1.0
+
+    def do_get_property(self, prop):
+        return getattr(self, prop.name)
+
+    def do_set_property(self, prop, value):
+        setattr(self, prop.name, value)
+
+    def do_transform_ip(self, buffer):
+        try:
+            image = gst_buffer_with_caps_to_ndarray(buffer, self.get_static_pad("sink").get_current_caps())
+            image[:] = gaussian_blur(image, self.kernel_size, sigma=(self.sigma_x, self.sigma_y))
+        except Exception as e:
+            print(f"Error in do_transform_ip: {e}")
+
+GObject.type_register(GstGaussianBlur)
+__gstelementfactory__ = (GstGaussianBlur.GST_PLUGIN_NAME, Gst.Rank.NONE, GstGaussianBlur)
+
+def on_bus_message(bus, message, loop):
+    print(message.type)
+    t = message.type
+    if t == Gst.MessageType.EOS:
+        print("End of stream")
+        loop.quit()
+    elif t == Gst.MessageType.ERROR:
+        err, debug = message.parse_error()
+        print(f"Error: {err}, Debug: {debug}")
+        loop.quit()
+
+def main():
+    pipe = Gst.Pipeline.new('dynamic')
+
+    src = Gst.ElementFactory.make("filesrc", "file-source")
+    src.set_property("location", "output.webm")
+
+    demux = Gst.ElementFactory.make("matroskademux")
+    custom_processor = Gst.ElementFactory.make("gaussianblur")
+    vp8enc = Gst.ElementFactory.make("vp8enc")
+    mux = Gst.ElementFactory.make("webmmux")
+    filesink = Gst.ElementFactory.make("filesink")
+    filesink.set_property("location", "result.webm")
+
+    if None in [src, demux, custom_processor, vp8enc, mux, filesink]:
+        print("Failed to create elements")
+        exit(1)
+
+    # Add elements to the pipeline
+    pipe.add(src)
+    pipe.add(demux)
+    pipe.add(custom_processor)
+    pipe.add(vp8enc)
+    pipe.add(mux)
+    pipe.add(filesink)
+
+
+    src.link(demux)
+    demux.link(custom_processor)
+    custom_processor.link(vp8enc)
+    vp8enc.link(mux)
+    mux.link(filesink)
+
+    # Set up bus to handle messages
+    bus = pipe.get_bus()
+    loop = GLib.MainLoop()
+
+    if bus is None:
+        print("Unable to get bus")
+        exit(1)
+
+    bus.add_signal_watch()
+    bus.connect("message", on_bus_message, loop)
+
+    # Start the pipeline
+    pipe.set_state(Gst.State.PLAYING)
+
+    try:
+        loop.run()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        # Stop the pipeline and cleanup
+        pipe.set_state(Gst.State.NULL)
+
+if __name__ == "__main__":
+    main()
+
