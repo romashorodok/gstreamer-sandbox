@@ -92,7 +92,7 @@ def gst_buffer_to_ndarray(buffer: Gst.Buffer, *, width: int, height: int, channe
     else:
         with map_gst_buffer(buffer, Gst.MapFlags.READ) as mapped:
             result = np.ndarray(buffer.get_size() // (bpp // BITS_PER_BYTE),
-                                buffer=mapped, dtype=dtype)
+                                buffer=mapped, dtype=dtype).squeeze()
     if channels > 0:
         result = result.reshape(height, width, channels).squeeze()
     return result
@@ -114,6 +114,7 @@ def gst_buffer_with_caps_to_ndarray(buffer: Gst.Buffer, caps: Gst.Caps, do_copy:
     video_format = gst_video_format_from_string(structure.get_value('format'))
 
     channels = get_num_channels(video_format)
+
 
     dtype = get_np_dtype(video_format)  # np.dtype
 
