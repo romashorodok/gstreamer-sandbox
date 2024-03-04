@@ -53,7 +53,6 @@ class CustomProcessor(GstBase.BaseTransform):
 
     @override
     def do_transform_ip(self, buf: Gst.Buffer) -> Gst.FlowReturn:
-    # def (self, inbuf: Gst.Buffer, outbuf: Gst.Buffer) -> Gst.FlowReturn:
         try:
             frame = gst_buffer_with_caps_to_ndarray(buf, self.sinkpad.get_current_caps())
 
@@ -62,31 +61,10 @@ class CustomProcessor(GstBase.BaseTransform):
                 DEFAULT_SIGMA_Y,
             )).squeeze()
 
-            # out = np.random.random((460800))
-
-            # pass
-            # outbuf =  Gst.Buffer.new_wrapped(out.tobytes())
-            
         except Exception as e:
             logging.error(e)
 
         return Gst.FlowReturn.OK
-
-
-    # def do_transform_ip(self, buf: Gst.Buffer) -> Gst.FlowReturn:
-    #     try:
-            # data = np.frombuffer(buf.extract_dup(0, buf.get_size()), dtype=np.uint8)
-
-            # Invert colors (simple example)
-            # inverted_data = 255 - data
-
-            # Create a new buffer from the modified data
-            # modified_buffer = Gst.Buffer.new_wrapped(inverted_data.tobytes())
-
-        # except Exception as e:
-        #     logging.error(e)
-        #
-        # return Gst.FlowReturn.OK
 
 GObject.type_register(CustomProcessor)
 __gstelementfactory__ = (CustomProcessor.GST_PLUGIN_NAME, Gst.Rank.NONE, CustomProcessor)
@@ -130,33 +108,38 @@ def main():
 
     src = Gst.ElementFactory.make("filesrc", "file-source")
     src.set_property("location", "output.mkv")
+    print("src", src)
 
     demux = Gst.ElementFactory.make("matroskademux")
+    print("demux", demux)
     queue = Gst.ElementFactory.make("queue")
+    print("queue", queue)
     queueAfter = Gst.ElementFactory.make("queue")
+    print("queueAfter", queueAfter)
 
     vp8dec = Gst.ElementFactory.make("vp8dec")
-
-    
-    # src = Gst.ElementFactory.make("videotestsrc")
+    print("vp8dec", vp8dec)
 
     custom_processor = CustomProcessor()
+    print("custom_processor", custom_processor)
 
-    # videosink = Gst.ElementFactory.make('appsink')
     vp8enc = Gst.ElementFactory.make("vp8enc")
-    # vp8enc.set_property("profile", "1")
+    print("vp8enc", vp8enc)
 
     # if None in [src, demux, queue, vp8dec, custom_processor, videosink]:
     #     print("Failed to create elements")
     #     exit(1)
 
     videosink = Gst.ElementFactory.make('appsink')
+    print("videosink", videosink)
     videosink.set_property("emit-signals", True)
     videosink.connect('new-sample', on_new_sample_inner)
 
     mux = Gst.ElementFactory.make("webmmux")
+    print("mux", mux)
     mux.set_property("streamable", True)  # Set to True for live streaming
     filesink = Gst.ElementFactory.make("filesink")
+    print("filesink", filesink)
     filesink.set_property("location", "result.webm")
 
     pipe.add(src) 
@@ -168,9 +151,7 @@ def main():
     pipe.add(vp8enc)
     pipe.add(mux)
     pipe.add(filesink)
-    # pipe.add(videosink)
 
-    # src.link(videosink)
     src.link(queue)
     queue.link(demux)
     demux.link(queueAfter)
@@ -180,42 +161,6 @@ def main():
     custom_processor.link(vp8enc)
     vp8enc.link(mux)
     mux.link(filesink)
-    # vp8enc.link(videosink)
-
-
-
-    # src.link(demux)
-    # demux.link(videosink)
-    # demux.link(queue)
-    # queue.link(videosink)
-    # vp8dec.link(videosink)
-    # vp8dec.link(custom_processor)
-    # custom_processor.link(videosink)
-    # custom_processor.link(videosink)
-    # custom_processor.link(vp8enc)
-    # vp8enc.link(videosink)
-
-    # pipe.add(src)
-    # pipe.add(demux)
-    # pipe.add(queue)
-    # pipe.add(vp8dec)
-    # pipe.add(src)
-    # pipe.add(custom_processor)
-    # pipe.add(vp8enc)
-    # pipe.add(videosink)
-
-    # src.link(custom_processor)
-    
-    # demux.connect("pad-added", pad_added_callback, queue)
-    # demux.link(queue)
-    # queue.link(vp8dec)
-
-    # Link your custom processor
-    # vp8dec.link(custom_processor)
-
-    # Link your custom processor's output to videosink
-    # custom_processor.link(videosink)
-    # custom_processor.link(vp8enc)
 
     bus = pipe.get_bus()
     loop = GLib.MainLoop()

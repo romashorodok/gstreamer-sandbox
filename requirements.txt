@@ -1,5 +1,5 @@
 Cython==3.0.8
-numpy==1.26.4
+opencv-python==4.9.0.80
 pycairo==1.26.0
 PyGObject==3.46.0
 PyGObject-stubs @ git+https://github.com/romashorodok/gstreamer-stubs.git@62d60a9c8d62b952bf82be0cef8306601d917a6c

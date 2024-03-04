@@ -27,9 +27,17 @@ COPY ./requirements.txt /app/requirements.txt
 RUN --mount=type=cache,target=/root/.cache \
     pip install -Ur /app/requirements.txt
 
+RUN apt install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-x 
+
+# How to build with meson
+# https://blogs.igalia.com/scerveau/discover-gstreamer-full-static-mode/
+
 RUN --mount=type=cache,target=/app/gstreamer/builddir \
-    meson setup -Dauto_features=disabled --default-library=static \
-    -Dgpl=enabled -Dlibav=enabled \
+    meson setup -Dauto_features=disabled --default-library=shared \
+    -Dgst-full-target-type=shared_library \
+    -Dgood=enabled -Dbase=enabled \
+    -Dgpl=enabled -Dlibav=disabled \
+    -Dgstreamer:tools=enabled \
     -Dgst-full-libraries=app,video \
     -Dpython=disabled \
     -Dgst-plugins-good:vpx=enabled \
@@ -46,59 +54,27 @@ RUN --mount=type=cache,target=/app/gstreamer/builddir \
     -Dvpx:vp9_decoder=enabled \
     --reconfigure builddir && meson compile -C builddir && meson install -C builddir
 
-# # --mount=type=cache,target=/app/gstreamer/builddir \
-# RUN meson setup -Dauto_features=disabled --default-library=static \
-#     -Dgst-full-libraries=app,video \
-#     -Dgst-plugins-good:vpx=enabled \
-#     -Dvpx:vp8_encoder=enabled \ 
-#     -Dvpx:vp8_decoder=enabled \
-#     -Dvpx:vp9_encoder=enabled \ 
-#     -Dvpx:vp9_decoder=enabled \
-#     -Dgst-plugins-base:audioresample=enabled \
-#     -Dgst-plugins-good:autodetect=enabled \
-#     -Dgst-plugin-base:compositor=enabled \
-#     -Dgst-plugin-base:videoconvertscale=enabled \
-#     --reconfigure builddir && meson compile -C builddir && meson install -C builddir
-
 WORKDIR /app/gstreamer/subprojects/gst-python
-# --mount=type=cache,target=/app/gstreamer/subprojects/gst-python/builddir \
 RUN meson setup builddir && meson compile -C builddir && meson install -C builddir
 
-RUN apt install -y curl
-RUN curl -LO https://github.com/neovim/neovim/releases/download/v0.9.4/nvim-linux64.tar.gz
-RUN export PATH="$PATH:/opt/nvim-linux64/bin"
-RUN tar -C /opt -xzf nvim-linux64.tar.gz
-
-WORKDIR /opt/nvim-linux64
-RUN cp bin/nvim /usr/bin/nvim && cp -r lib/nvim /usr/lib && cp -r share/nvim /usr/share/
-
-RUN git clone --branch no-auto-install https://github.com/romashorodok/dotfiles.git ~/.config/nvim
-RUN apt install -y fzf npm
-RUN apt install -y golang
-
-RUN git clone https://github.com/jesseduffield/lazygit.git --depth 1
-RUN cd lazygit && go build -o /usr/bin/lazygit main.go
-
-RUN pip install git+https://github.com/romashorodok/gstreamer-stubs.git
+# RUN apt install -y curl
+# RUN curl -LO https://github.com/neovim/neovim/releases/download/v0.9.4/nvim-linux64.tar.gz
+# RUN export PATH="$PATH:/opt/nvim-linux64/bin"
+# RUN tar -C /opt -xzf nvim-linux64.tar.gz
+#
+# WORKDIR /opt/nvim-linux64
+# RUN cp bin/nvim /usr/bin/nvim && cp -r lib/nvim /usr/lib && cp -r share/nvim /usr/share/
+#
+# RUN git clone --branch no-auto-install https://github.com/romashorodok/dotfiles.git ~/.config/nvim
+# RUN apt install -y fzf npm
+# RUN apt install -y golang
+#
+# RUN git clone https://github.com/jesseduffield/lazygit.git --depth 1
+# RUN cd lazygit && go build -o /usr/bin/lazygit main.go
+#
+# RUN pip install git+https://github.com/romashorodok/gstreamer-stubs.git
 
 WORKDIR /app
 
 # /usr/lib/python3/dist-packages/gi/overrides/
 # /lib/x86_64-linux-gnu/gstreamer-1.0/
-
-# FROM ubuntu:24.04 as media-server
-# RUN apt update
-# RUN apt install -y curl git
-#
-# RUN apt install -y musl-dev pkg-config python3-dev golang meson npm
-#
-# COPY . /app
-# WORKDIR /app
-# RUN apk add meson
-# RUN apk add --no-cache neovim git curl
-# RUN git clone --branch no-auto-install https://github.com/romashorodok/dotfiles.git ~/.config/nvim
-# RUN apk add musl-dev pkgconfig python3-dev go bash npm
-# RUN apk add meson
-# COPY . /app
-# WORKDIR /app
-
