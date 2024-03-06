@@ -1,0 +1,5 @@
+cpp
+%c
+-I/usr/local/include/gstreamer-1.0
+
+# $(pkg-config --cflags --libs gstreamer-1.0)

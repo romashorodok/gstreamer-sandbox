@@ -10,6 +10,7 @@ import "C"
 import (
 	"log"
 	"os"
+	"time"
 	"unsafe"
 )
 
@@ -23,6 +24,7 @@ func main() {
 		log.Fatalf("Error getting current directory: %v", err)
 	}
 
+    time.Sleep(time.Second)
 	// Add the current directory to sys.path
 	sysPath := C.PySys_GetObject(C.CString("path"))
 	currentDirStr := C.CString(currentDir)
