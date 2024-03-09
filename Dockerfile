@@ -110,10 +110,10 @@ RUN apk add --no-cache g++ musl-dev gcompat libstdc++ libffi-dev flex bison nasm
 #
 # WORKDIR /app
 #
-# FROM alpine:3.19.1 as vp8-rtp
-# RUN apk add --no-cache ffmpeg
-#
-# CMD [ "ffmpeg", "-re", "-f", "lavfi", "-i", "testsrc=size=640x480:rate=30", "-c:v", "libvpx", "-b:v", "1M", "-an", "-f", "rtp", "-buffer_size", "1024", "-pkt_size", "1024", "-payload_type", "111", "rtp://localhost:34788" ]
+FROM alpine:3.19.1 as vp8-rtp
+RUN apk add --no-cache ffmpeg
+
+CMD [ "ffmpeg", "-re", "-f", "lavfi", "-i", "testsrc=size=640x480:rate=30", "-c:v", "libvpx", "-b:v", "1M", "-an", "-f", "rtp", "-buffer_size", "1024", "-pkt_size", "1024", "-payload_type", "111", "rtp://localhost:34788" ]
 #
 # # /usr/lib/python3/dist-packages/gi/overrides/
 # # /lib/x86_64-linux-gnu/gstreamer-1.0/

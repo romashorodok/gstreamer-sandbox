@@ -1,16 +1,14 @@
+#include "pipelines.h"
 #include <glib.h>
 #include <gst/gst.h>
 #include <iostream>
 
-int main(int argc, char *argv[]) {
-  // Initialize GStreamer
-  gst_init(&argc, &argv);
+void setup() { gst_init(0, nullptr); }
 
-  // Get GStreamer version information
+void print_version() {
   guint major, minor, micro, nano;
   gst_version(&major, &minor, &micro, &nano);
 
-  // Print the version information
   std::cout << "GStreamer version:"
             << " " << major << " " << minor << micro << nano << std::endl;
 
@@ -19,6 +17,4 @@ int main(int argc, char *argv[]) {
   std::cout << result << std::endl;
 
   std::cout << GST_ELEMENT_NAME(result) << std::endl;
-
-  return 0;
 }
