@@ -39,11 +39,13 @@ private:
   GstElement *vp8dec;
   GstElement *vp8enc;
   GstElement *webmmux;
-  GstElement *filesink;
-  // GstElement *printsink;
+  // GstElement *filesink;
+  GstElement *cgoOnSampleSink;
 };
 
 #endif
+extern void CGO_onSampleBuffer(void *buffer, int size, int duration);
+
 void write_proxy_pipe(void *pipe, void *buffer, int len);
 void start_proxy_pipe(void *pipe);
 void delete_proxy_pipe(void *pipe);

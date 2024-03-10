@@ -11,6 +11,7 @@ import "C"
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"unsafe"
 )
@@ -43,6 +44,12 @@ func udpServer(pipeline unsafe.Pointer) {
 		defer C.free(b)
 		C.write_proxy_pipe(pipeline, b, C.int(len(buffer)))
 	}
+}
+
+//export CGO_onSampleBuffer
+func CGO_onSampleBuffer(buffer unsafe.Pointer, size C.int, duration C.int) {
+	log.Println("Golang recv", buffer, size, duration)
+	C.free(buffer)
 }
 
 func main() {

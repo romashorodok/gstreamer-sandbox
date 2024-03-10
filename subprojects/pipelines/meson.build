@@ -30,5 +30,5 @@ pipelines_dep = declare_dependency(link_with: pipelines_lib,
   dependencies: [gstreamer_full_dep],
   )
 
-pkgconfig.generate(pipelines_lib)
+pkgconfig.generate(pipelines_lib) 
 meson.override_dependency(pipelines_lib.name(), pipelines_dep)
